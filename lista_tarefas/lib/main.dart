@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
-
 void main() {
   runApp(MaterialApp(
     home: Home(),
@@ -19,9 +18,9 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  List<String> _toDoList = [];
+  List<Map<String, dynamic>> _toDoList = [];
 
-  TextEditingController _controller = TextEditingController();
+  final _toDoController = TextEditingController();
 
   @override
   void initState() {
@@ -35,8 +34,12 @@ class _HomeState extends State<Home> {
 
   void _addTodo() {
     setState(() {
-      _toDoList.add(_controller.text);
-      _controller.text = '';
+      Map<String, dynamic> newToDo = {
+        "title": _toDoController.text,
+        "ok": false,
+      };
+      _toDoController.text = "";
+      _toDoList.add(newToDo);
       _saveData();
     });
   }
@@ -78,7 +81,7 @@ class _HomeState extends State<Home> {
               children: <Widget>[
                 Expanded(
                   child: TextField(
-                    controller: _controller,
+                    controller: _toDoController,
                     decoration: InputDecoration(
                       labelText: "Nova Tarefa",
                       labelStyle: TextStyle(color: Colors.blueAccent),
@@ -97,8 +100,19 @@ class _HomeState extends State<Home> {
               padding: EdgeInsets.only(top: 10.0),
               itemCount: _toDoList.length,
               itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(_toDoList[index]),
+                return CheckboxListTile(
+                  title: Text(_toDoList[index]["title"]),
+                  value: _toDoList[index]["ok"],
+                  secondary: CircleAvatar(
+                    child: Icon(
+                        _toDoList[index]["ok"] ? Icons.check : Icons.error),
+                  ),
+                  onChanged: (c) {
+                    setState(() {
+                      _toDoList[index]["ok"] = c;
+                      _saveData();
+                    });
+                  },
                 );
               },
             ),
