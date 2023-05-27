@@ -1,44 +1,39 @@
-import 'dart:async';
 import 'dart:io';
 
-import 'package:agenda_contatos/helpers/contact_helper.dart';
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
+import '../helpers/contact_helper.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ContactPage extends StatefulWidget {
+  final Contact? contact;
 
-  final Contact contact;
-
-  ContactPage({this.contact});
+  const ContactPage({Key? key, this.contact}) : super(key: key);
 
   @override
-  _ContactPageState createState() => _ContactPageState();
+  State<ContactPage> createState() => _ContactPageState();
 }
 
 class _ContactPageState extends State<ContactPage> {
-
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-
-  final _nameFocus = FocusNode();
-
+  Contact? _editedContact;
   bool _userEdited = false;
 
-  Contact _editedContact;
+  final _nameControler = TextEditingController();
+  final _emailControler = TextEditingController();
+  final _phoneControler = TextEditingController();
+
+  final _nameFocus = FocusNode();
 
   @override
   void initState() {
     super.initState();
 
-    if(widget.contact == null){
+    if (widget.contact == null) {
       _editedContact = Contact();
     } else {
-      _editedContact = Contact.fromMap(widget.contact.toMap());
-
-      _nameController.text = _editedContact.name;
-      _emailController.text = _editedContact.email;
-      _phoneController.text = _editedContact.phone;
+      _editedContact = Contact.fromMap(widget.contact!.toMap());
+      _nameControler.text = _editedContact!.name!;
+      _emailControler.text = _editedContact!.email!;
+      _phoneControler.text = _editedContact!.phone!;
     }
   }
 
@@ -49,74 +44,79 @@ class _ContactPageState extends State<ContactPage> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.red,
-          title: Text(_editedContact.name ?? "Novo Contato"),
+          title: Text(_editedContact!.name ?? "Novo Contato"),
           centerTitle: true,
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: (){
-            if(_editedContact.name != null && _editedContact.name.isNotEmpty){
+          onPressed: () {
+            if (_editedContact!.name != null &&
+                _editedContact!.name!.isNotEmpty) {
               Navigator.pop(context, _editedContact);
             } else {
               FocusScope.of(context).requestFocus(_nameFocus);
             }
           },
-          child: Icon(Icons.save),
+          child: const Icon(Icons.save),
           backgroundColor: Colors.red,
         ),
         body: SingleChildScrollView(
-          padding: EdgeInsets.all(10.0),
+          padding: const EdgeInsets.all(10),
           child: Column(
-            children: <Widget>[
+            children: [
               GestureDetector(
                 child: Container(
-                  width: 140.0,
-                  height: 140.0,
+                  width: 140,
+                  height: 140,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     image: DecorationImage(
-                        image: _editedContact.img != null ?
-                        FileImage(File(_editedContact.img)) :
-                        AssetImage("images/person.png"),
-                        fit: BoxFit.cover
+                      image: _editedContact!.img != null
+                          ? FileImage(File(_editedContact!.img!))
+                          : const AssetImage("images/person.jpg")
+                              as ImageProvider,
                     ),
                   ),
                 ),
-                onTap: (){
-                  ImagePicker.pickImage(source: ImageSource.camera).then((file){
-                    if(file == null) return;
+                onTap: () {
+                  ImagePicker()
+                      .pickImage(source: ImageSource.camera)
+                      .then((file) {
+                    if (file == null) {
+                      return;
+                    }
                     setState(() {
-                      _editedContact.img = file.path;
+                      _editedContact!.img = file.path;
                     });
                   });
                 },
               ),
               TextField(
-                controller: _nameController,
-                focusNode: _nameFocus,
-                decoration: InputDecoration(labelText: "Nome"),
-                onChanged: (text){
+                decoration: const InputDecoration(labelText: "Nome"),
+                onChanged: (text) {
                   _userEdited = true;
                   setState(() {
-                    _editedContact.name = text;
+                    _editedContact!.name = text;
                   });
                 },
+                controller: _nameControler,
+                focusNode: _nameFocus,
               ),
               TextField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: "Email"),
-                onChanged: (text){
+                decoration: const InputDecoration(labelText: "Email"),
+                onChanged: (text) {
                   _userEdited = true;
-                  _editedContact.email = text;
+                  _editedContact!.email = text;
                 },
+                controller: _emailControler,
                 keyboardType: TextInputType.emailAddress,
               ),
               TextField(
-                controller: _phoneController,
-                decoration: InputDecoration(labelText: "Phone"),
-                onChanged: (text){
+                decoration: const InputDecoration(labelText: "Phone"),
+                onChanged: (text) {
                   _userEdited = true;
-                  _editedContact.phone = text;
+                  _editedContact!.phone = text;
                 },
+                controller: _phoneControler,
                 keyboardType: TextInputType.phone,
               ),
             ],
@@ -126,35 +126,34 @@ class _ContactPageState extends State<ContactPage> {
     );
   }
 
-  Future<bool> _requestPop(){
-    if(_userEdited){
-      showDialog(context: context,
-        builder: (context){
-          return AlertDialog(
-            title: Text("Descartar Alterações?"),
-            content: Text("Se sair as alterações serão perdidas."),
-            actions: <Widget>[
-              FlatButton(
-                child: Text("Cancelar"),
-                onPressed: (){
-                  Navigator.pop(context);
-                },
-              ),
-              FlatButton(
-                child: Text("Sim"),
-                onPressed: (){
-                  Navigator.pop(context);
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          );
-        }
-      );
+  Future<bool> _requestPop() {
+    if (_userEdited) {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text("Descartar alterações?"),
+              content: const Text("Se sair, as alterações serão perdidas!"),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Cancelar"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Sim"),
+                ),
+              ],
+            );
+          });
       return Future.value(false);
     } else {
       return Future.value(true);
     }
   }
-
 }
